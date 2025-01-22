@@ -12,13 +12,13 @@ public class Main {
             if (input.equals("exit 0")) {
                 break;
             }
+            if(input.startsWith("echo "))
+            {
+                System.out.println(input.replace("echo ", ""));
+                continue;
+            }
             System.out.println(input+": command not found");
         } 
         
     }
-    // static void shouldExitIfRequested(String input) {
-    //     if(input.trim().toLowerCase().startsWith("exit")) {
-    //         System.exit(0);
-    //     }
-    // }
 }

@@ -1,14 +1,19 @@
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        // Uncomment this block to pass the first stage
+        Scanner scanner = new Scanner(System.in);
+        List<String> builtIns = builtIns();
+
         while( true ) {
             System.out.print("$ ");
 
-            Scanner scanner = new Scanner(System.in);
             String input = scanner.nextLine();
-            // shouldExitIfRequested(input);
+
             if (input.equals("exit 0")) {
                 break;
             }
@@ -20,16 +25,41 @@ public class Main {
             if(input.startsWith("type "))
             {
                 input = input.substring(4).trim();
-                if(input.equals("echo") || input.equals("exit") || input.equals("type")) {
+                if( builtIns.contains(input) ) {
                     System.out.println(input+" is a shell builtin");
                 } 
                 else {
-                    System.out.println(input+": not found");
+                    String path = getPath(input);
+                    if( path != null ) {
+                        System.out.println(input+" is "+path);
+                    }
+                    else {
+                        System.out.println(input+": not found");
+                    }
                 }
                 continue;
             }
             System.out.println(input+": command not found");
         } 
+        scanner.close();
         
+    }
+
+    static String getPath(String parameter) {
+        for (String path : System.getenv("PATH").split(":")) {
+            Path fullPath = Path.of(path, parameter);
+            if (Files.isRegularFile(fullPath)) {
+            return fullPath.toString();
+            }
+        }
+        return null;
+    }
+
+    static List<String> builtIns() {
+        List<String> builtIns = new ArrayList<>();
+        builtIns.add("echo");
+        builtIns.add("type");
+        builtIns.add("exit");
+        return builtIns;
     }
 }

@@ -104,6 +104,16 @@ public class Main {
                             }
                             prev = c;
                         }
+                        else {
+                            if(c=='\\' && i+1<parameter.length()) {
+                                char next = parameter.charAt(i+1);
+                                if(next==' ')
+                                    prev = ' ';
+                                System.out.print(next);
+                                i++;
+                                continue;
+                            }
+                        }
                         System.out.print(c);
                     }
                     System.out.println();

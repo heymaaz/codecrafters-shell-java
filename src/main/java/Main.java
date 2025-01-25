@@ -74,12 +74,16 @@ public class Main {
                     for(int i = 0; i<parameter.length(); i++) {
                         char c = parameter.charAt(i);
                         if(c=='\"') {
+                            if(insideSingleQuote) {
+                                System.out.print("\"");
+                                continue;
+                            }
                             insideDoubleQuote = !insideDoubleQuote;
                             prev = c;
                             continue;
                         }
                         if(!insideDoubleQuote) {
-                            if(c=='\\' && i+1<parameter.length()){
+                            if(!insideSingleQuote && c=='\\' && i+1<parameter.length()){
                                 char next = parameter.charAt(i+1);
                                 if(next==' ')
                                     prev = ' ';

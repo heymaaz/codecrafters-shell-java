@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Scanner;
@@ -45,12 +46,29 @@ public class Main {
                     }
                     break;
                 case "cd":
-                    Path newPath = Paths.get(parameter).toAbsolutePath();
+                    String tmpDir = cwd;
+                    String[] parts = parameter.split("/");
+                    for(String part:parts) {
+                        if(part.equals("..")) {
+                            tmpDir = tmpDir.substring(0,tmpDir.lastIndexOf('/'));
+                        }
+                        else if(part.equals(".")) {
+                            //do nothing
+                        }
+                        else if(part.equals("")) {
+                            tmpDir = "";
+                        }
+                        else {
+                            tmpDir = tmpDir.concat("/").concat(part);
+                        }
+                    }
+                    
+                    Path newPath = Paths.get(tmpDir);
                     if(newPath.toFile().isDirectory()) {
-                        cwd=parameter;
+                        cwd=tmpDir;
                     }
                     else {
-                        System.out.println("cd: "+parameter+": No such file or directory");
+                        System.out.println("cd: "+tmpDir+": No such file or directory");
                     }
                     break;
                 case "echo":
@@ -85,34 +103,6 @@ public class Main {
                         System.out.println(input+": command not found");
                     }
             }
-
-
-        //     if (input.equals("exit 0")) {
-        //         break;
-        //     }
-        //     if(input.startsWith("echo "))
-        //     {
-        //         System.out.println(input.replace("echo ", ""));
-        //         continue;
-        //     }
-        //     if(input.startsWith("type "))
-        //     {
-        //         input = input.substring(4).trim();
-        //         if( builtIns.contains(input) ) {
-        //             System.out.println(input+" is a shell builtin");
-        //         } 
-        //         else {
-        //             String path = getPath(input);
-        //             if( path != null ) {
-        //                 System.out.println(input+" is "+path);
-        //             }
-        //             else {
-        //                 System.out.println(input+": not found");
-        //             }
-        //         }
-        //         continue;
-        //     }
-        //     System.out.println(input+": command not found");
         }
         
     }

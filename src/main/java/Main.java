@@ -1,11 +1,7 @@
-import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Scanner;
 
@@ -46,6 +42,10 @@ public class Main {
                     }
                     break;
                 case "cd":
+                    if(parameter.equals("~")) {
+                        cwd = System.getenv("HOME").toString();
+                        break;
+                    }
                     String tmpDir = cwd;
                     String[] parts = parameter.split("/");
                     for(String part:parts) {

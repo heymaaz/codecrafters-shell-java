@@ -21,7 +21,7 @@ public class Main {
             boolean insideSingleQuote = false;
             boolean insideDoubleQuote = false;
             char prev = '\u0000';
-            
+
             parameter = input.substring(command.length()).trim();
             switch (command) {
                 case "exit":
@@ -79,6 +79,14 @@ public class Main {
                             continue;
                         }
                         if(!insideDoubleQuote) {
+                            if(c=='\\' && i+1<parameter.length()){
+                                char next = parameter.charAt(i+1);
+                                if(next==' ')
+                                    prev = ' ';
+                                System.out.print(next);
+                                i++;
+                                continue;
+                            }
                             if(c=='\''){
                                 insideSingleQuote = !insideSingleQuote;
                                 continue;

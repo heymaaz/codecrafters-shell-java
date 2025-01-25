@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -14,149 +15,208 @@ public class Main {
         while( true ) {
             System.out.print("$ ");
 
-            String input = scanner.nextLine();
+            String input = scanner.nextLine().trim();
             String[] str = input.split(" ");
             String command = str[0];
             String parameter = "";
-            boolean insideSingleQuote = false;
-            boolean insideDoubleQuote = false;
-            char prev = '\u0000';
+            
+            if( input.charAt(0)=='\'' ) {
+                int index = 1+input.substring(1).indexOf('\'');
+                command = input.substring(0,index+2);
+            }
+
+            if( input.charAt(0)=='\"' ) {
+                int index = 1+input.substring(1).indexOf('\"');
+                command = input.substring(0,index+2);
+            }
 
             parameter = input.substring(command.length()).trim();
-            switch (command) {
-                case "exit":
-                    if(parameter.equals("0")) {
-                        System.exit(0);
-                    }
-                    else {
-                        System.out.println(input+": command not found");
-                    }
-                    break;
-                case "pwd":
-                    if(parameter.equals("")) {
-                        System.out.println(cwd);
-                    }
-                    else {
-                        System.out.println("pwd: too many arguments");
-                    }
-                    break;
-                case "cd":
-                    if(parameter.equals("~")) {
-                        cwd = System.getenv("HOME").toString();
-                        break;
-                    }
-                    String tmpDir = cwd;
-                    String[] parts = parameter.split("/");
-                    for(String part:parts) {
-                        if(part.equals("..")) {
-                            tmpDir = tmpDir.substring(0,tmpDir.lastIndexOf('/'));
-                        }
-                        else if(part.equals(".")) {
-                            //do nothing
-                        }
-                        else if(part.equals("")) {
-                            tmpDir = "";
-                        }
-                        else {
-                            tmpDir = tmpDir.concat("/").concat(part);
-                        }
-                    }
-                    
-                    Path newPath = Paths.get(tmpDir);
-                    if(newPath.toFile().isDirectory()) {
-                        cwd=tmpDir;
-                    }
-                    else {
-                        System.out.println("cd: "+tmpDir+": No such file or directory");
-                    }
-                    break;
-                case "echo":
-                    for(int i = 0; i<parameter.length(); i++) {
-                        char c = parameter.charAt(i);
-                        if(c=='\"') {
-                            if(insideSingleQuote) {
-                                System.out.print("\"");
-                                continue;
-                            }
-                            insideDoubleQuote = !insideDoubleQuote;
-                            prev = c;
-                            continue;
-                        }
-                        if(!insideDoubleQuote) {
-                            if(!insideSingleQuote && c=='\\' && i+1<parameter.length()){
-                                char next = parameter.charAt(i+1);
-                                if(next==' ')
-                                    prev = ' ';
-                                System.out.print(next);
-                                i++;
-                                continue;
-                            }
-                            if(c=='\''){
-                                insideSingleQuote = !insideSingleQuote;
-                                continue;
-                            }
-                            if(c==' ' && !insideSingleQuote){
-                                if(prev == ' ')
-                                    continue;
-                                else{
-                                    prev = ' ';
-                                }
-                            }
-                            prev = c;
-                        }
-                        else {
-                            if(c=='\\' && i+1<parameter.length()) {
-                                char next = parameter.charAt(i+1);
-                                if(next==' ')
-                                    prev = ' ';
-                                System.out.print(next);
-                                i++;
-                                continue;
-                            }
-                        }
-                        System.out.print(c);
-                    }
-                    System.out.println();
-                    break;
-                case "type":
-                    if( builtIns.contains(parameter) ) {
-                        System.out.println(parameter+" is a shell builtin");
-                    } 
-                    else {
-                        String path = getPath(parameter);
-                        if( path != null ) {
-                            System.out.println(parameter+" is "+path);
-                        }
-                        else {
-                            System.out.println(parameter+": not found");
-                        }
-                    }
-                    break;
-                default:
-                    if( !parameter.equals("") ) {
-                        String path = getPath(command);
-                        if(path != null) {
-                            String fullCommand = command + " " + parameter;
-                            // System.out.println(fullCommand);
-                            Process process = Runtime.getRuntime().exec(new String[]{"sh", "-c", fullCommand});
-                            process.getInputStream().transferTo(System.out);
-                        } else {
-                            System.out.println(command + ": command not found");
-                        }
-                    }
-                    else {
-                        System.out.println(input+": command not found");
-                    }
+
+            switchCommands(input, command, parameter, cwd, builtIns);
+        }
+    }
+        
+    static void switchCommands(String input, String command, String parameter, String cwd, List<String> builtIns) {
+        switch (command) {
+            case "exit":
+                handleExit(input, parameter);
+                break;
+
+            case "pwd":
+                handlePWD(cwd, parameter);
+                break;
+
+            case "cd":
+                cwd = handleCD(cwd, parameter);
+                break;
+
+            case "echo":
+                handleEcho(parameter);
+                break;
+
+            case "type":
+                handleType(builtIns, parameter);
+                break;
+
+            default:
+                if( !parameter.equals("") ) {
+                    handlePathCommands(command, parameter);
+                }
+                else {
+                    System.out.println(input+": command not found");
+                }
+        }
+    }
+        
+    
+
+    static void handleExit(String input, String parameter) {
+        if(parameter.equals("0")) {
+            System.exit(0);
+        }
+        else {
+            System.out.println(input+": command not found");
+        }
+    }
+    
+    static void handlePWD(String cwd, String parameter) {
+        if(parameter.equals("")) {
+            System.out.println(cwd);
+        }
+        else {
+            System.out.println("pwd: too many arguments");
+        }
+    }
+    
+    static String handleCD(String cwd, String parameter) {
+        if(parameter.equals("~")) {
+            return System.getenv("HOME").toString();
+        }
+        String tmpDir = cwd;
+        String[] parts = parameter.split("/");
+        for(String part:parts) {
+            if(part.equals("..")) {
+                tmpDir = tmpDir.substring(0,tmpDir.lastIndexOf('/'));
+            }
+            else if(part.equals(".")) {
+                //do nothing
+            }
+            else if(part.equals("")) {
+                tmpDir = "";
+            }
+            else {
+                tmpDir = tmpDir.concat("/").concat(part);
             }
         }
         
+        Path newPath = Paths.get(tmpDir);
+        if(newPath.toFile().isDirectory()) {
+            cwd=tmpDir;
+        }
+        else {
+            System.out.println("cd: "+tmpDir+": No such file or directory");
+        }
+        return cwd;
+    }
+    
+    static void handleEcho(String parameter) {
+        boolean insideSingleQuote = false;
+        boolean insideDoubleQuote = false;
+        char prev = '\u0000';
+
+        for(int i = 0; i<parameter.length(); i++) {
+            char c = parameter.charAt(i);
+            if(c=='\"') {
+                if(insideSingleQuote) {
+                    System.out.print("\"");
+                    continue;
+                }
+                insideDoubleQuote = !insideDoubleQuote;
+                prev = c;
+                continue;
+            }
+
+            if(!insideDoubleQuote) {
+                if(!insideSingleQuote && c=='\\' && i+1<parameter.length()) {
+                    char next = parameter.charAt(i+1);
+                    if(next==' ')
+                        prev = ' ';
+                    System.out.print(next);
+                    i++;
+                    continue;
+                }
+
+                if(c=='\'') {
+                    insideSingleQuote = !insideSingleQuote;
+                    continue;
+                }
+
+                if(c==' ' && !insideSingleQuote) {
+                    if(prev == ' ')
+                        continue;
+                    else{
+                        prev = ' ';
+                    }
+                }
+
+                prev = c;
+            }
+
+            else {
+                if(c=='\\' && i+1<parameter.length()) {
+                    char next = parameter.charAt(i+1);
+                    if(next==' ')
+                        prev = ' ';
+                    System.out.print(next);
+                    i++;
+                    continue;
+                }
+            }
+            System.out.print(c);
+        }
+        System.out.println();
     }
 
-    static String getPath(String parameter) {
+    static void handleType(List<String> builtIns, String parameter) {
+        if( builtIns.contains(parameter) ) {
+            System.out.println(parameter+" is a shell builtin");
+        } 
+        else {
+            String path = getPath(parameter);
+            if( path != null ) {
+                System.out.println(parameter+" is "+path);
+            }
+            else {
+                System.out.println(parameter+": not found");
+            }
+        }
+    }
+    
+    static void handlePathCommands(String command, String parameter) {
+        String path = getPath(command);
+        if(path != null) {
+            String fullCommand = command + " " + parameter;
+            Process process;
+            try {
+                process = Runtime.getRuntime().exec(new String[]{"sh", "-c", fullCommand});
+                process.getInputStream().transferTo(System.out);
+            } 
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+        } 
+        else {
+            System.out.println(command + ": command not found");
+        }
+    }
+
+    static String getPath(String command) {
+        if(command.charAt(0)=='\'' || command.charAt(0)=='\"')
+            command=command.substring(1, command.length()-2).trim();
         for (String path : System.getenv("PATH").split(":")) {
-            Path fullPath = Path.of(path, parameter);
+            Path fullPath = Path.of(path, command);
             if (Files.isRegularFile(fullPath)) {
-            return fullPath.toString();
+                return fullPath.toString();
             }
         }
         return null;

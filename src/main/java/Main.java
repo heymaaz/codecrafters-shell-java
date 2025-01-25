@@ -1,5 +1,6 @@
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -29,6 +30,14 @@ public class Main {
                     }
                     else {
                         System.out.println(input+": command not found");
+                    }
+                    break;
+                case "pwd":
+                    if(parameter.equals("")) {
+                        System.out.println(Paths.get("").toAbsolutePath());
+                    }
+                    else {
+                        System.out.println("pwd: too many arguments");
                     }
                     break;
                 case "echo":
@@ -108,6 +117,7 @@ public class Main {
     static List<String> builtIns() {
         List<String> builtIns = new ArrayList<>();
         builtIns.add("echo");
+        builtIns.add("pwd");
         builtIns.add("type");
         builtIns.add("exit");
         return builtIns;

@@ -1,7 +1,10 @@
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Scanner;
 
@@ -9,6 +12,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(System.in);
         List<String> builtIns = builtIns();
+        String cwd = Paths.get("").toAbsolutePath().toString();
 
         while( true ) {
             System.out.print("$ ");
@@ -34,10 +38,19 @@ public class Main {
                     break;
                 case "pwd":
                     if(parameter.equals("")) {
-                        System.out.println(Paths.get("").toAbsolutePath());
+                        System.out.println(cwd);
                     }
                     else {
                         System.out.println("pwd: too many arguments");
+                    }
+                    break;
+                case "cd":
+                    Path newPath = Paths.get(parameter).toAbsolutePath();
+                    if(newPath.toFile().isDirectory()) {
+                        cwd=parameter;
+                    }
+                    else {
+                        System.out.println("cd: "+parameter+": No such file or directory");
                     }
                     break;
                 case "echo":
@@ -118,6 +131,7 @@ public class Main {
         List<String> builtIns = new ArrayList<>();
         builtIns.add("echo");
         builtIns.add("pwd");
+        builtIns.add("cd");
         builtIns.add("type");
         builtIns.add("exit");
         return builtIns;

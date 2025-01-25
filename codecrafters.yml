@@ -9,3 +9,4 @@ debug: false
 #
 # Available versions: java-23
 language_pack: java-23
+debug: true

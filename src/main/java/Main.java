@@ -18,8 +18,14 @@ public class Main {
             String[] str = input.split(" ");
             String command = str[0];
             String parameter = "";
+            boolean singleQuoteFlag = false;
 
             for(int i = 1; i<str.length; i++) {
+                if(str[i].indexOf('\'')>=0) {
+                    singleQuoteFlag = !singleQuoteFlag;
+                }
+                if(str[i].equals("") && !singleQuoteFlag)
+                    continue;
                 parameter = parameter+" "+str[i];
             }
             parameter = parameter.trim();
@@ -72,7 +78,7 @@ public class Main {
                     }
                     break;
                 case "echo":
-                    System.out.println(parameter);
+                    System.out.println(parameter.replaceAll("'", ""));
                     break;
                 case "type":
                     if( builtIns.contains(parameter) ) {
@@ -92,8 +98,8 @@ public class Main {
                     if( !parameter.equals("") ) {
                         String path = getPath(command);
                         if(path != null) {
-                            String[] fullPath = new String[]{command, parameter};
-                            Process process = Runtime.getRuntime().exec(fullPath);
+                            String fullCommand = command + " " + parameter;
+                            Process process = Runtime.getRuntime().exec(new String[]{"sh", "-c", fullCommand});
                             process.getInputStream().transferTo(System.out);
                         } else {
                             System.out.println(command + ": command not found");

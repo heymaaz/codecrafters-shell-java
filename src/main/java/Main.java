@@ -18,18 +18,11 @@ public class Main {
             String[] str = input.split(" ");
             String command = str[0];
             String parameter = "";
-            boolean singleQuoteFlag = false;
-
-            for(int i = 1; i<str.length; i++) {
-                if(str[i].indexOf('\'')>=0) {
-                    singleQuoteFlag = !singleQuoteFlag;
-                }
-                if(str[i].equals("") && !singleQuoteFlag)
-                    continue;
-                parameter = parameter+" "+str[i];
-            }
-            parameter = parameter.trim();
-
+            boolean insideSingleQuote = false;
+            boolean insideDoubleQuote = false;
+            char prev = '\u0000';
+            
+            parameter = input.substring(command.length()).trim();
             switch (command) {
                 case "exit":
                     if(parameter.equals("0")) {
@@ -78,7 +71,30 @@ public class Main {
                     }
                     break;
                 case "echo":
-                    System.out.println(parameter.replaceAll("'", ""));
+                    for(int i = 0; i<parameter.length(); i++) {
+                        char c = parameter.charAt(i);
+                        if(c=='\"') {
+                            insideDoubleQuote = !insideDoubleQuote;
+                            prev = c;
+                            continue;
+                        }
+                        if(!insideDoubleQuote) {
+                            if(c=='\''){
+                                insideSingleQuote = !insideSingleQuote;
+                                continue;
+                            }
+                            if(c==' ' && !insideSingleQuote){
+                                if(prev == ' ')
+                                    continue;
+                                else{
+                                    prev = ' ';
+                                }
+                            }
+                            prev = c;
+                        }
+                        System.out.print(c);
+                    }
+                    System.out.println();
                     break;
                 case "type":
                     if( builtIns.contains(parameter) ) {
@@ -99,6 +115,7 @@ public class Main {
                         String path = getPath(command);
                         if(path != null) {
                             String fullCommand = command + " " + parameter;
+                            // System.out.println(fullCommand);
                             Process process = Runtime.getRuntime().exec(new String[]{"sh", "-c", fullCommand});
                             process.getInputStream().transferTo(System.out);
                         } else {

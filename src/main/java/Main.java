@@ -13,35 +13,85 @@ public class Main {
             System.out.print("$ ");
 
             String input = scanner.nextLine();
+            String[] str = input.split(" ");
+            String command = str[0];
+            String parameter = "";
 
-            if (input.equals("exit 0")) {
-                break;
+            for(int i = 1; i<str.length; i++) {
+                parameter = parameter+" "+str[i];
             }
-            if(input.startsWith("echo "))
-            {
-                System.out.println(input.replace("echo ", ""));
-                continue;
-            }
-            if(input.startsWith("type "))
-            {
-                input = input.substring(4).trim();
-                if( builtIns.contains(input) ) {
-                    System.out.println(input+" is a shell builtin");
-                } 
-                else {
-                    String path = getPath(input);
-                    if( path != null ) {
-                        System.out.println(input+" is "+path);
+            parameter = parameter.trim();
+
+            switch (command) {
+                case "exit":
+                    if(parameter.equals("0")) {
+                        System.exit(0);
                     }
                     else {
-                        System.out.println(input+": not found");
+                        System.out.println(input+": command not found");
                     }
-                }
-                continue;
+                    break;
+                case "echo":
+                    System.out.println(parameter);
+                    break;
+                case "type":
+                    if( builtIns.contains(parameter) ) {
+                        System.out.println(parameter+" is a shell builtin");
+                    } 
+                    else {
+                        String path = getPath(parameter);
+                        if( path != null ) {
+                            System.out.println(parameter+" is "+path);
+                        }
+                        else {
+                            System.out.println(parameter+": not found");
+                        }
+                    }
+                    break;
+                default:
+                    if( !parameter.equals("") ) {
+                        String path = getPath(command);
+                        if(path != null) {
+                            String[] fullPath = new String[]{command, parameter};
+                            Process process = Runtime.getRuntime().exec(fullPath);
+                            process.getInputStream().transferTo(System.out);
+                        } else {
+                            System.out.println(command + ": command not found");
+                        }
+                    }
+                    else {
+                        System.out.println(input+": command not found");
+                    }
             }
-            System.out.println(input+": command not found");
-        } 
-        scanner.close();
+
+
+        //     if (input.equals("exit 0")) {
+        //         break;
+        //     }
+        //     if(input.startsWith("echo "))
+        //     {
+        //         System.out.println(input.replace("echo ", ""));
+        //         continue;
+        //     }
+        //     if(input.startsWith("type "))
+        //     {
+        //         input = input.substring(4).trim();
+        //         if( builtIns.contains(input) ) {
+        //             System.out.println(input+" is a shell builtin");
+        //         } 
+        //         else {
+        //             String path = getPath(input);
+        //             if( path != null ) {
+        //                 System.out.println(input+" is "+path);
+        //             }
+        //             else {
+        //                 System.out.println(input+": not found");
+        //             }
+        //         }
+        //         continue;
+        //     }
+        //     System.out.println(input+": command not found");
+        }
         
     }
 

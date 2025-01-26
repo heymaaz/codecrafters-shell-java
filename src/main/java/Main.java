@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -196,12 +197,14 @@ public class Main {
         String path = getPath(command);
         if(path != null) {
             String fullCommand = command + " " + parameter;
-            Process process;
+            ProcessBuilder pb = new ProcessBuilder("sh", "-c", fullCommand);
+            pb.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+            pb.directory(new File(System.getProperty("user.dir")));
             try {
-                process = Runtime.getRuntime().exec(new String[]{"sh", "-c", fullCommand});
-                process.getInputStream().transferTo(System.out);
+                Process process = pb.start();
+                process.waitFor();
             } 
-            catch (IOException e) {
+            catch (Exception e) {
                 e.printStackTrace();
             }
         } 

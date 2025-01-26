@@ -10,7 +10,6 @@ public class Main {
     public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(System.in);
         List<String> builtIns = builtIns();
-        String cwd = Paths.get("").toAbsolutePath().toString();
 
         while( true ) {
             System.out.print("$ ");
@@ -32,22 +31,23 @@ public class Main {
 
             parameter = input.substring(command.length()).trim();
 
-            switchCommands(input, command, parameter, cwd, builtIns);
+            switchCommands(input, command, parameter, builtIns);
         }
     }
         
-    static void switchCommands(String input, String command, String parameter, String cwd, List<String> builtIns) {
+    static void switchCommands(String input, String command, String parameter, List<String> builtIns) {
+        String currentDir = System.getProperty("user.dir");
         switch (command) {
             case "exit":
                 handleExit(input, parameter);
                 break;
 
             case "pwd":
-                handlePWD(cwd, parameter);
+                handlePWD(currentDir, parameter);
                 break;
 
             case "cd":
-                cwd = handleCD(cwd, parameter);
+                handleCD(currentDir, parameter);
                 break;
 
             case "echo":
@@ -79,20 +79,21 @@ public class Main {
         }
     }
     
-    static void handlePWD(String cwd, String parameter) {
+    static void handlePWD(String currentDir, String parameter) {
         if(parameter.equals("")) {
-            System.out.println(cwd);
+            System.out.println(currentDir);
         }
         else {
             System.out.println("pwd: too many arguments");
         }
     }
     
-    static String handleCD(String cwd, String parameter) {
+    static void handleCD(String currentDir, String parameter) {
         if(parameter.equals("~")) {
-            return System.getenv("HOME").toString();
+            System.setProperty("user.dir",System.getenv("HOME").toString());
+            return;
         }
-        String tmpDir = cwd;
+        String tmpDir = currentDir;
         String[] parts = parameter.split("/");
         for(String part:parts) {
             if(part.equals("..")) {
@@ -111,12 +112,11 @@ public class Main {
         
         Path newPath = Paths.get(tmpDir);
         if(newPath.toFile().isDirectory()) {
-            cwd=tmpDir;
+            System.setProperty("user.dir",tmpDir);
         }
         else {
             System.out.println("cd: "+tmpDir+": No such file or directory");
         }
-        return cwd;
     }
     
     static void handleEcho(String parameter) {
